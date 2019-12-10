@@ -1,9 +1,12 @@
 from tawern_data import tawern_upgrade_cost
+from hand import Hand
 import random
 
 
 class Player:
     def __init__(self):
+        self.hand = Hand()
+
         self.tier = 1
         self.tawern_upgrade_cost = tawern_upgrade_cost[self.tier + 1]
         self.max_gold = 3

@@ -1,7 +1,7 @@
 import numpy as np
 from recruitment import RecruitmentStage
 
-a = RecruitmentStage()
+a = RecruitmentStage(np.random.default_rng())
 opt = a.generate_options(3)
 print(opt)
 

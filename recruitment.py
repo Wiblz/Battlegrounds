@@ -3,8 +3,8 @@ from tawern_data import *
 
 
 class RecruitmentStage:
-    def __init__(self):
-        self.generator = np.random.default_rng()
+    def __init__(self, generator):
+        self.generator = generator
         self.pool = dict()
         self.tier_sum = {
             1 : 216,

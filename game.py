@@ -3,12 +3,15 @@ from battle import BattleStage
 from player import Player
 from tawern_data import heroes
 import random
+import numpy as np
 
 
 class Game:
     def __init__(self):
-        self.recruitment = RecruitmentStage()
-        self.battle = BattleStage()
+        self.generator = np.random.default_rng()
+
+        self.recruitment = RecruitmentStage(self.generator)
+        self.battle = BattleStage(self.generator)
         self.players = [Player() for i in range(8)]
 
     def offer_heroes(self):
