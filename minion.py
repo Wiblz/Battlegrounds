@@ -5,12 +5,11 @@ class Minion:
                 bubble=False,
                 magnetic=False,
                 cleave=False,
-                windfury=False,
-                battlecry=None,
-                add_effect=None,
-                remove_effect=None):
+                windfury=False):
 
         self.board = None
+        self.hero = None
+        self.position = None
 
         self.name = name
         self.attack = attack
@@ -28,17 +27,21 @@ class Minion:
         self.effects = []               # minions that have effect applied to this minion
 
         self.deathrattles = []
-        self.battlecry = battlecry
-        self.add_effect = add_effect    # aura effect this minion provides to other minions
+        self.battlecry = None
+        self.add_effect = None          # aura effect this minion provides to other minions
                                         # (supposedly) should be function
-        self.remove_effect = remove_effect
+        self.remove_effect = None
 
         self.dead = False
 
     def set_board(self, board):
         self.board = board
     
+    def get_position(self):
+        return self.board.minions.index(self)
+    
     def on_play(self, target=None):
+        return
         # Handle battlecry
         if self.battlecry is not None:
             self.battlecry(self, self.board, target)
@@ -48,6 +51,7 @@ class Minion:
             self.add_effect(self.board)
 
     def on_death(self):
+        return
         # Remove effect
         for minion in self.board.minions:
             if minion != self and self in minion.effects:

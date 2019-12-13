@@ -1,6 +1,5 @@
 # At the start of each turn
 # Whenever you summon a murloc
-# After you play a demon
 # Your other murlocs have +2 attack
 # Has +1 attack for each murlock on a battlefield
 # Whenever a friendly beast dies
@@ -23,6 +22,9 @@
 # Your other demons have +2/+2
 # Whenever this attacks and kills minion
 # This minion always attacks the enemy minion with the lowest attack
+
+# After you play a demon
+
 # + Windfury
 
 class Board:
