@@ -13,6 +13,7 @@ class Game:
         self.recruitment = RecruitmentStage(self.generator)
         self.battle = BattleStage(self.generator)
         self.players = [Player() for i in range(8)]
+        # self.players[0].bot = False                   # uncomment to try interactive mode
 
     def offer_heroes(self):
         for i in range(8):
@@ -30,8 +31,14 @@ class Game:
         self.offer_heroes()
         
         while True:
-            pass
-
+            ready = False
+            while not ready:
+                ready = True
+                for player in self.players:
+                    if not player.ready:
+                        self.recruitment.next_action(player)
+                        ready = False
+            
 
 if __name__ == '__main__':
     game = Game()
