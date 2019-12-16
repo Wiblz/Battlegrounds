@@ -34,6 +34,9 @@ class Minion:
 
         self.dead = False
 
+    def __str__(self):
+        return f'{self.name} {self.attack}/{self.health}'
+         
     def set_board(self, board):
         self.board = board
     

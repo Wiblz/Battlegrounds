@@ -8,6 +8,7 @@ class Player:
     def __init__(self):
         self.bot = True
         self.ready = False
+        self.tawern_options = None
         self.hand = Hand()
         self.board = Board()
 

@@ -461,11 +461,11 @@ options_count = {
 }
 
 tawern_upgrade_cost = {
-    2 : 5,
-    3 : 7,
-    4 : 8,
-    5 : 9,
-    6 : 11
+    1 : 5,
+    2 : 7,
+    3 : 8,
+    4 : 9,
+    5 : 11
 }
 
 heroes = [

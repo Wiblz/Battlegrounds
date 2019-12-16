@@ -14,9 +14,6 @@ class RecruitmentStage:
             3 : 221,
         }
 
-        self.frozen = False
-        self.current_options = dict()
-
         for tier in tier_contents:
             self.pool[tier] = dict()
             cnt = count_per_minion[tier]
@@ -24,11 +21,29 @@ class RecruitmentStage:
             for minion in tier_contents[tier]:
                 self.pool[tier][minion] = cnt
 
+    def start_stage(self, players):
+        for player in players:
+            if player.tawern_options is None:
+                player.tawern_options = self.generate_options(player.tier)
+            
+            elif len(player.tawern_options) < options_count[player.tier]:
+                player.tawern_options += self.generate_options(player.tier, options_count[player.tier] - len(player.tawern_options))
+
     def next_action(self, player: Player):
-        if player not in self.current_options:
-            self.current_options[player] = self.generate_options(player.tier)
-        
         action = self.recruitment_action(player)
+        if action in ['ready, freeze']:
+            player.ready = True
+        
+        if action == 'ready':
+            player.tawern_options = None
+
+        elif action == 'refresh':
+            player.refresh()
+        
+        elif action == 'upgrade tawern':
+            player.tier += 1
+            player.tawern_upgrade_cost = tawern_upgrade_cost[player.tier]
+    
         print(action)
     
     def on_buy(self, name):
@@ -37,15 +52,16 @@ class RecruitmentStage:
     def on_sell(self, minion):
         pass
 
-    def refresh(self, previous_options, tier):
-        self.return_to_pool(previous_options)
-        return self.generate_options(tier)
+    def refresh(self, player):
+        self.return_to_pool(player.tawern_options)
+        player.tawern_options = self.generate_options(player.tier)
 
     def return_to_pool(self, options):
         for option in options:
             self.pool[minions[option]['tier']][option] += 1
 
-    def generate_options(self, tier):
+    def generate_options(self, tier, size=None):
+        size = size or options_count[tier]
         active_pool = []
         probabilities = np.array([])
 
@@ -54,7 +70,7 @@ class RecruitmentStage:
             probabilities = np.concatenate((probabilities, np.array(list(self.pool[t].values()))))
 
         probabilities /= probabilities.sum()
-        options = self.generator.choice(np.array(active_pool), size=options_count[tier], p=probabilities)
+        options = self.generator.choice(np.array(active_pool), size=size, p=probabilities)
         
         for option in options:
             self.pool[minions[option]['tier']][option] -= 1
@@ -65,7 +81,7 @@ class RecruitmentStage:
         options = []
 
         if player.gold > 2:
-            for i in range(len(self.current_options[player])):
+            for i in range(len(player.tawern_options)):
                 options.append(f'buy {i}')
 
         if player.gold > 0:
@@ -74,28 +90,27 @@ class RecruitmentStage:
         if len(player.board.minions) < 7:
             options.append('play card')
         
-        if player.gold >= player.tawern_upgrade_cost:
+        if player.tier != 6 and player.gold >= player.tawern_upgrade_cost:
             options.append('upgrade tawern')
 
         options += ['ready', 'freeze']
         
         if player.bot:
-            choice = random.choice(options)
+            action = random.choice(options)
         else:
-            self.print_tawern(self.current_options[player])
-            choice = self.read_input(options) 
+            self.print_state(player)
+            action = self.read_input(options) 
         
-        if choice in ['ready', 'freeze']:
-            player.ready = True
-        
-        return choice
+        return action
     
-    def print_tawern(self, tawern_minions):
+    def print_state(self, player):
         print('TAWERN\n')
-        for i in range(len(tawern_minions)):
-            print(f'{i}. {tawern_minions[i]}')
+        for i in range(len(player.tawern_options)):
+            print(f'{i}. {player.tawern_options[i]}')
 
-        print('\n')
+        print('\nHAND\n')
+        for i in range(player.hand.size()):
+            print(f'{i}. {player.hand.minions[i]}')
 
     def read_input(self, options):
         st = ''

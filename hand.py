@@ -3,6 +3,9 @@ class Hand:
         self.minions = []   # minions in the hand are stored as strings
         self.counters = dict()
 
+    def size(self):
+        return len(self.minions)
+
     def buy(self, minion_name):
         self.minions.append(minion_name)
         if minion_name not in self.counters:
