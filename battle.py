@@ -5,7 +5,11 @@ class BattleStage:
     def __init__(self, generator):
         self.generator = generator
 
-    def determine_first_move(self):
+    def determine_first_move(self,first_board, second_board):
+        if len(first_board) > len(second_board):
+            return 0
+        elif len(first_board) < len(second_board):
+            return 1
         return self.generator.randint(2)
     
     def start_battle(self, first_board, second_board):
