@@ -27,7 +27,10 @@ class RecruitmentStage:
                 player.tawern_options = self.generate_options(player.tier)
             
             elif len(player.tawern_options) < options_count[player.tier]:
-                player.tawern_options += self.generate_options(player.tier, options_count[player.tier] - len(player.tawern_options))
+                player.tawern_options += self.generate_options(
+                    tier=player.tier,
+                    size=options_count[player.tier] - len(player.tawern_options)
+                )
 
     def next_action(self, player: Player):
         action = self.recruitment_action(player)
@@ -80,17 +83,17 @@ class RecruitmentStage:
     def recruitment_action(self, player):
         options = []
 
-        if player.gold > 2:
+        if player.gold >= MINION_COST:
             for i in range(len(player.tawern_options)):
                 options.append(f'buy {i}')
 
-        if player.gold > 0:
+        if player.gold >= REFRESH_COST:
             options.append('refresh')
 
-        if len(player.board.minions) < 7:
+        if len(player.board.minions) < MAX_BOARD_SIZE:
             options.append('play card')
         
-        if player.tier != 6 and player.gold >= player.tawern_upgrade_cost:
+        if player.tier != MAX_TIER and player.gold >= player.tawern_upgrade_cost:
             options.append('upgrade tawern')
 
         options += ['ready', 'freeze']

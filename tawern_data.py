@@ -494,3 +494,9 @@ heroes = [
     'Trade Prince Gallywix',
     'Yogg\'Saron, Hope\'s End',
 ]
+
+MINION_COST = 3
+REFRESH_COST = 1
+
+MAX_TIER = 6
+MAX_BOARD_SIZE = 7
