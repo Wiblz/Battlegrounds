@@ -5,6 +5,12 @@ class Hand:
 
     def size(self):
         return len(self.minions)
+    
+    def is_full(self):
+        return self.size() >= 10
+    
+    def is_empty(self):
+        return self.size() == 0
 
     def buy(self, minion_name):
         self.minions.append(minion_name)

@@ -1,124 +1,86 @@
 import numpy as np
-import random
-from tawern_data import *
+from tawern_data import State, tawern_upgrade_cost, options_count, MINION_COST, REFRESH_COST, MAX_TIER
 from player import Player
+from pool import Pool
 
 
 class RecruitmentStage:
     def __init__(self, generator):
         self.generator = generator
-        self.pool = dict()
-        self.tier_sum = {
-            1 : 216,
-            2 : 240,
-            3 : 221,
-        }
-
-        for tier in tier_contents:
-            self.pool[tier] = dict()
-            cnt = count_per_minion[tier]
-
-            for minion in tier_contents[tier]:
-                self.pool[tier][minion] = cnt
+        self.pool = Pool(generator)
 
     def start_stage(self, players):
+        '''
+        Generates new minions in tawern for each player in 'players', unless the board is frozen.
+        Increases starting gold by 1 (up to 10) and refreshes players gold.
+        Decreases tawern upgrade cost by 1.
+
+        Should be called at the start of each recruitment stage.
+
+        TODO: Kick dead players (?)
+        '''
         for player in players:
+            player.state = State.RECRUITMENT
+            player.refresh_gold()
+            player.tawern_upgrade_cost -= 1
+
             if player.tawern_options is None:
-                player.tawern_options = self.generate_options(player.tier)
+                player.tawern_options = self.pool.generate_minions(player.tier)
             
             elif len(player.tawern_options) < options_count[player.tier]:
-                player.tawern_options += self.generate_options(
+                player.tawern_options += self.pool.generate_minions(
                     tier=player.tier,
                     size=options_count[player.tier] - len(player.tawern_options)
                 )
 
-    def next_action(self, player: Player):
-        action = self.recruitment_action(player)
+    def take_action(self, player: Player):
+        action_space = self.generate_action_space(player)
+        action = player.take_action(action_space)
+
         if action in ['ready, freeze']:
-            player.ready = True
+            player.state = State.READY
         
         if action == 'ready':
             player.tawern_options = None
 
         elif action == 'refresh':
-            player.refresh()
+            self.refresh_tawern(player)
         
         elif action == 'upgrade tawern':
             player.tier += 1
             player.tawern_upgrade_cost = tawern_upgrade_cost[player.tier]
     
         print(action)
-    
-    def on_buy(self, name):
-        pass
 
-    def on_sell(self, minion):
-        pass
+    def refresh_tawern(self, player):
+        self.pool.return_minions(player.tawern_options)
+        player.tawern_options = self.pool.generate_minions(player.tier)
 
-    def refresh(self, player):
-        self.return_to_pool(player.tawern_options)
-        player.tawern_options = self.generate_options(player.tier)
+    def generate_action_space(self, player):
+        action_space = []
 
-    def return_to_pool(self, options):
-        for option in options:
-            self.pool[minions[option]['tier']][option] += 1
+        if player.state is State.RECRUITMENT:
+            if player.gold >= MINION_COST and not player.hand.is_full():
+                action_space.append('buy')
 
-    def generate_options(self, tier, size=None):
-        size = size or options_count[tier]
-        active_pool = []
-        probabilities = np.array([])
+            if player.gold >= REFRESH_COST:
+                action_space.append('refresh')
 
-        for t in range(1, tier + 1):
-            active_pool += list(self.pool[t].keys())
-            probabilities = np.concatenate((probabilities, np.array(list(self.pool[t].values()))))
+            if not player.hand.is_empty():
+                action_space.append('play card')
+            
+            if player.tier != MAX_TIER and player.gold >= player.tawern_upgrade_cost:
+                action_space.append('upgrade tawern')
+            
+            # reordering makes sense when 2 or more minions are present on the board
+            if len(player.board.minions) > 1:
+                action_space.append('reorder')
 
-        probabilities /= probabilities.sum()
-        options = self.generator.choice(np.array(active_pool), size=size, p=probabilities)
-        
-        for option in options:
-            self.pool[minions[option]['tier']][option] -= 1
+            if len(player.board.minions) > 0:
+                action_space.append('sell')
 
-        return options
+            action_space += ['ready', 'freeze']
+        elif player.state is State.DISCOVER:
+            pass
 
-    def recruitment_action(self, player):
-        options = []
-
-        if player.gold >= MINION_COST:
-            for i in range(len(player.tawern_options)):
-                options.append(f'buy {i}')
-
-        if player.gold >= REFRESH_COST:
-            options.append('refresh')
-
-        if len(player.board.minions) < MAX_BOARD_SIZE:
-            options.append('play card')
-        
-        if player.tier != MAX_TIER and player.gold >= player.tawern_upgrade_cost:
-            options.append('upgrade tawern')
-
-        options += ['ready', 'freeze']
-        
-        if player.bot:
-            action = random.choice(options)
-        else:
-            self.print_state(player)
-            action = self.read_input(options) 
-        
-        return action
-    
-    def print_state(self, player):
-        print('TAWERN\n')
-        for i in range(len(player.tawern_options)):
-            print(f'{i}. {player.tawern_options[i]}')
-
-        print('\nHAND\n')
-        for i in range(player.hand.size()):
-            print(f'{i}. {player.hand.minions[i]}')
-
-    def read_input(self, options):
-        st = ''
-
-        for i in range(len(options)):
-            st += f'{i}. {options[i]}\n'
-        
-        return options[int(input(st))]
+        return action_space

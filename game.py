@@ -36,8 +36,8 @@ class Game:
             while not ready:
                 ready = True
                 for player in self.players:
-                    if not player.ready:
-                        self.recruitment.next_action(player)
+                    if not player.is_ready():
+                        self.recruitment.take_action(player)
                         ready = False
             
 

@@ -1,3 +1,37 @@
+from enum import Enum
+
+
+MINION_COST = 3
+REFRESH_COST = 1
+
+MAX_GOLD = 10
+MAX_TIER = 6
+MAX_BOARD_SIZE = 7
+MAX_HAND_SIZE = 10
+
+count_per_minion = {
+    1 : 18,
+    2 : 15,
+    3 : 13,
+}
+
+options_count = {
+    1 : 3,
+    2 : 4,
+    3 : 4,
+    4 : 5,
+    5 : 5,
+    6 : 6,
+}
+
+tawern_upgrade_cost = {
+    1 : 5,
+    2 : 7,
+    3 : 8,
+    4 : 9,
+    5 : 11
+}
+
 minions = {
     ### TIER 1 ###
     # NEUTRALS #
@@ -445,29 +479,6 @@ tier_contents = {
     ]
 }
 
-count_per_minion = {
-    1 : 18,
-    2 : 15,
-    3 : 13,
-}
-
-options_count = {
-    1 : 3,
-    2 : 4,
-    3 : 4,
-    4 : 5,
-    5 : 5,
-    6 : 6,
-}
-
-tawern_upgrade_cost = {
-    1 : 5,
-    2 : 7,
-    3 : 8,
-    4 : 9,
-    5 : 11
-}
-
 heroes = [
     'A. F. Kay',
     'Bartendotron',
@@ -495,8 +506,13 @@ heroes = [
     'Yogg\'Saron, Hope\'s End',
 ]
 
-MINION_COST = 3
-REFRESH_COST = 1
-
-MAX_TIER = 6
-MAX_BOARD_SIZE = 7
+class State(Enum):
+    HERO_CHOICE = 0
+    RECRUITMENT = 1
+    BATTLECRY   = 2
+    DISCOVER    = 3
+    PLAYING_CARD = 4
+    PLACING_MINION = 5
+    CHOOSING_MINION_TO_SELL = 6
+    READY       = 7
+    DEAD        = 8

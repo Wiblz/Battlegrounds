@@ -3,7 +3,7 @@ from minion import Minion
 from recruitment import RecruitmentStage
 
 a = RecruitmentStage(np.random.default_rng())
-opt = a.generate_options(3)
+opt = a.generate_recruitment_options(3)
 print(opt)
 
 while True:
