@@ -1,7 +1,8 @@
 import numpy as np
-from tawern_data import State, tawern_upgrade_cost, options_count, MINION_COST, REFRESH_COST, MAX_TIER
+from tawern_data import State, tawern_upgrade_cost, options_count, MINION_COST, REFRESH_COST, MAX_TIER, MAX_GOLD
 from player import Player
 from pool import Pool
+from card import MinionCard, Coin, RecruitmentMap
 
 
 class RecruitmentStage:
@@ -34,53 +35,100 @@ class RecruitmentStage:
                 )
 
     def take_action(self, player: Player):
-        action_space = self.generate_action_space(player)
-        action = player.take_action(action_space)
+        if player.state is State.RECRUITMENT:
+            action_space = self.generate_recruitment_actions(player)
+            action = action_space[player.choose_action(action_space)]
+            self.handle_recruitment_action(player=player, action=action)
+            
+        elif player.state is State.CHOOSING_CARD:
+            action_space = self.generate_card_choose_actions(player)
+            card = player.hand.cards[player.choose_action(action_space)]
 
-        if action in ['ready, freeze']:
-            player.state = State.READY
-        
-        if action == 'ready':
-            player.tawern_options = None
+            if isinstance(card, MinionCard):
+                player.state = State.PLAYING_MINION
+                player.card_in_play = card
+            elif isinstance(card, Coin):
+                player.state = State.RECRUITMENT
+                player.hand.cards.remove(card)
+                if player.gold < MAX_GOLD:
+                    player.gold += 1
+            elif isinstance(card, RecruitmentMap):
+                player.state = State.DISCOVER
+                player.discover_options = [] # TODO: generate discover options
+                player.gold -= 3
+            # TODO: add banana
+            # TODO: add triple reward
 
-        elif action == 'refresh':
-            self.refresh_tawern(player)
-        
-        elif action == 'upgrade tawern':
-            player.tier += 1
-            player.tawern_upgrade_cost = tawern_upgrade_cost[player.tier]
-    
+        elif player.state is State.PLAYING_MINION:
+            pass
+
+        elif player.state is State.PLACING_MINION:
+            pass
+
         print(action)
 
     def refresh_tawern(self, player):
         self.pool.return_minions(player.tawern_options)
         player.tawern_options = self.pool.generate_minions(player.tier)
 
-    def generate_action_space(self, player):
+    def generate_recruitment_actions(self, player):
         action_space = []
 
-        if player.state is State.RECRUITMENT:
-            if player.gold >= MINION_COST and not player.hand.is_full():
-                action_space.append('buy')
+        if player.gold >= MINION_COST and not player.hand.is_full():
+            action_space.append('buy')
 
-            if player.gold >= REFRESH_COST:
-                action_space.append('refresh')
+        if player.gold >= REFRESH_COST:
+            action_space.append('refresh')
 
-            if not player.hand.is_empty():
-                action_space.append('play card')
+        if not player.hand.is_empty():
+            action_space.append('play card')
             
-            if player.tier != MAX_TIER and player.gold >= player.tawern_upgrade_cost:
-                action_space.append('upgrade tawern')
+        if player.tier != MAX_TIER and player.gold >= player.tawern_upgrade_cost:
+            action_space.append('upgrade tawern')
             
-            # reordering makes sense when 2 or more minions are present on the board
-            if len(player.board.minions) > 1:
-                action_space.append('reorder')
+        # reordering makes sense when 2 or more minions are present on the board
+        if len(player.board.minions) > 1:
+            action_space.append('reorder')
 
-            if len(player.board.minions) > 0:
-                action_space.append('sell')
+        if len(player.board.minions) > 0:
+            action_space.append('sell')
 
-            action_space += ['ready', 'freeze']
-        elif player.state is State.DISCOVER:
-            pass
+        action_space += ['ready', 'freeze']
+        return action_space
 
+    def handle_recruitment_action(self, player, action):
+        if action in ['ready, freeze']:
+            player.state = State.READY
+            
+        if action == 'ready':
+            player.tawern_options = None
+
+        elif action == 'refresh':
+            player.gold -= 1
+            self.refresh_tawern(player)
+            
+        elif action == 'upgrade tawern':
+            player.gold -= player.tawern_upgrade_cost
+            player.tier += 1
+            player.tawern_upgrade_cost = tawern_upgrade_cost[player.tier]
+        
+        elif action == 'sell':
+            player.state = State.CHOOSING_MINION_TO_SELL
+
+        elif action == 'buy':
+            player.state = State.CHOOSING_MINION_TO_BUY
+
+        elif action == 'reorder':
+            player.state = State.CHOOSING_MINION_TO_MOVE
+
+        elif action == 'play card':
+            player.state = State.CHOOSING_CARD
+
+    def generate_card_choose_actions(self, player):
+        action_space = []
+    
+        for card in player.hand.cards:
+            if player.gold >= card.cost:
+                action_space.append(f'play {card}')
+        
         return action_space
