@@ -1,10 +1,13 @@
+from types import MethodType
 from minion import Minion
 import random
 
 
 class Minions:
     @staticmethod
-    def new(name, board):
+    def new(card, player):
+        board = player.board
+        name = card.name
         if name == 'Alleycat':
             instance = Minion(name, 1, 1, 1, type='Beast')
 
@@ -17,7 +20,7 @@ class Minions:
                 
                 return summoned
 
-            instance.battlecry = battlecry
+            instance.battlecry = MethodType(battlecry, instance)
         elif name == 'Mecharoo':
             instance = Minion(name, 1, 1, 1, type='Mech')
 
@@ -31,7 +34,7 @@ class Minions:
                 
                 return summoned
 
-            instance.deathrattles.append(deathrattle)    
+            instance.deathrattles.append(MethodType(deathrattle, instance))    
         elif name == 'Murloc Tidehunter':
             instance = Minion(name, 2, 1, 1, type='Murloc')
 
@@ -44,7 +47,7 @@ class Minions:
                 
                 return summoned
 
-            instance.battlecry = battlecry
+            instance.battlecry = MethodType(battlecry, instance)
         elif name == 'Selfless Hero':
             instance = Minion(name, 2, 1, 1)
 
@@ -55,7 +58,7 @@ class Minions:
 
                 return []                                       # no new minions summoned
 
-            instance.deathrattles.append(deathrattle)
+            instance.deathrattles.append(MethodType(deathrattle, instance))
         elif name == 'Rockpool Hunter':
             instance = Minion(name, 2, 3, 1, type='Murloc')
 
@@ -65,29 +68,30 @@ class Minions:
 
                 return []
 
-            instance.battlecry = battlecry
+            instance.valid_targets = board.murlocs
+            instance.targeted_battlecry = MethodType(battlecry, instance)
         elif name == 'Vulgar Homunculus':
             instance = Minion(name, 2, 4, 1, type='Demon', taunt=True)
 
             def battlecry(self):
-                self.hero.hp -= 2
+                player.hero.hp -= 2
 
                 return []
 
-            instance.battlecry = battlecry
+            instance.battlecry = MethodType(battlecry, instance)
         elif name == 'Wrath Weaver':
             instance = Minion(name, 1, 1, 1)
 
             def trigger(self, minion):
-                self.hero.hp -= 1
+                player.hero.hp -= 1
                 self.attack += 2
                 self.health += 2
 
             def on_play(self):
                 board.on_demon_played.append(self)
             
-            instance.on_play = on_play
-            instance.trigger = trigger
+            instance.on_play = MethodType(on_play, instance)
+            instance.trigger = MethodType(trigger, instance)
         elif name == 'Micro Machine':
             instance = Minion(name, 1, 2, 1, type='Mech')
             
@@ -97,8 +101,8 @@ class Minions:
             def on_play(self):
                 board.on_turn_start.append(self)
 
-            instance.on_play = on_play
-            instance.trigger = trigger
+            instance.on_play = MethodType(on_play, instance)
+            instance.trigger = MethodType(trigger, instance)
         elif name == 'Murloc Tidecaller':
             instance = Minion(name, 1, 2, 1, type='Murloc')
 
@@ -108,8 +112,8 @@ class Minions:
             def on_play(self):
                 board.on_murloc_summoned.append(self)
 
-            instance.on_play = on_play
-            instance.trigger = trigger
+            instance.on_play = MethodType(on_play, instance)
+            instance.trigger = MethodType(trigger, instance)
         elif name == 'Dire Wolf Alpha':
             instance = Minion(name, 2, 2, 1, type='Beast')
 
@@ -123,8 +127,8 @@ class Minions:
 
                 target -= 1
             
-            instance.add_effect = add_effect
-            instance.remove_effect = remove_effect
+            instance.add_effect = MethodType(add_effect, instance)
+            instance.remove_effect = MethodType(remove_effect, instance)
         elif name == 'Righteous Protector':
             instance = Minion(name, 1, 1, 1, taunt=True, bubble=True)
         elif name == 'Voidwalker':
@@ -140,6 +144,9 @@ class Minions:
         elif name == 'Psych-o-Tron':
             instance = Minion(name, 3, 4, 3, type='Mech', taunt=True, bubble=True)
         
+        instance.attack += card.attack_buff
+        instance.health += card.health_buff
+
         return instance
 
 

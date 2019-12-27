@@ -1,4 +1,5 @@
 from tawern_data import options_count, tier_contents, count_per_minion, minions
+from card import MinionCard
 import numpy as np
 
 
@@ -19,9 +20,12 @@ class Pool:
             for minion in tier_contents[tier]:
                 self.pool[tier][minion] = cnt
     
+    def return_minion(self, minion_name):
+        self.pool[minions[minion_name]['tier']][minion_name] += 1
+
     def return_minions(self, options):
         for option in options:
-            self.pool[minions[option]['tier']][option] += 1
+            self.return_minion(option.name)
 
     def generate_minions(self, tier, size=None):
         size = size or options_count[tier]
@@ -34,8 +38,10 @@ class Pool:
 
         probabilities /= probabilities.sum()
         options = self.generator.choice(np.array(active_pool), size=size, p=probabilities)
-        
+        cards = []
+
         for option in options:
             self.pool[minions[option]['tier']][option] -= 1
+            cards.append(MinionCard(option))
 
-        return options
+        return cards

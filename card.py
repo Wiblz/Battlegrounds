@@ -17,9 +17,9 @@ class MinionCard(Card):
 
     def __repr__(self):
         if self.attack_buff != 0 or self.health_buff != 0:
-            return super.__repr__() + f' (+{self.attack_buff}/{self.health_buff})'
+            return super().__repr__() + f' (+{self.attack_buff}/{self.health_buff})'
         else:
-            return super.__repr__()
+            return super().__repr__()
     
 class RecruitmentMap(Card):
     def __init__(self, cost, tier):

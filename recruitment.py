@@ -3,6 +3,7 @@ from tawern_data import State, tawern_upgrade_cost, options_count, MINION_COST, 
 from player import Player
 from pool import Pool
 from card import MinionCard, Coin, RecruitmentMap
+from factories import Minions
 
 
 class RecruitmentStage:
@@ -43,10 +44,11 @@ class RecruitmentStage:
         elif player.state is State.CHOOSING_CARD:
             action_space = self.generate_card_choose_actions(player)
             card = player.hand.cards[player.choose_action(action_space)]
+            player.hand.cards.remove(card)
 
             if isinstance(card, MinionCard):
                 player.state = State.PLAYING_MINION
-                player.card_in_play = card
+                player.minion_picked = Minions.new(card=card, player=player)
             elif isinstance(card, Coin):
                 player.state = State.RECRUITMENT
                 player.hand.cards.remove(card)
@@ -60,12 +62,50 @@ class RecruitmentStage:
             # TODO: add triple reward
 
         elif player.state is State.PLAYING_MINION:
-            pass
+            slot = player.choose_board_slot()
+
+            if player.minion_picked.targeted_battlecry is not None and \
+               len(player.minion_picked.valid_targets) > 0:
+                player.board.put(player.minion_picked, slot)
+                player.state = State.CHOOSING_BATTLECRY_TARGET
+            else:
+                player.board.play(minion=player.minion_picked, slot=slot)
+                player.state = State.RECRUITMENT
+                player.minion_picked = None
+
+        elif player.state is State.CHOOSING_BATTLECRY_TARGET:
+            player.state = State.RECRUITMENT
+            target = player.choose_minion(player.minion_picked.valid_targets)
+            player.board.handle_targeted_battlecry(player.minion_picked, target)
+            player.minion_picked = None
 
         elif player.state is State.PLACING_MINION:
-            pass
+            player.state = State.RECRUITMENT
+            slot = player.choose_board_slot()
+            player.board.put(player.minion_picked, slot)
+            player.minion_picked = None
 
-        print(action)
+        elif player.state is State.CHOOSING_MINION_TO_BUY:
+            player.state = State.RECRUITMENT
+            minion = player.choose_minion(player.tawern_options)
+            player.tawern_options.remove(minion)
+            player.hand.cards.append(minion)
+            player.gold -= 3
+
+        elif player.state is State.CHOOSING_MINION_TO_SELL:
+            player.state = State.RECRUITMENT
+            minion = player.choose_minion(player.board.minions)
+            player.board.minions.remove(minion)
+            self.pool.return_minion(minion.name)
+            if player.gold < MAX_GOLD:
+                player.gold += 1
+
+        elif player.state is State.CHOOSING_MINION_TO_MOVE:
+            player.state = State.PLACING_MINION
+            player.minion_picked = player.choose_minion(player.board.minions)
+            player.board.remove(player.minion_picked)
+
+        print('Player', player.id, player.board.minions)
 
     def refresh_tawern(self, player):
         self.pool.return_minions(player.tawern_options)
@@ -74,7 +114,7 @@ class RecruitmentStage:
     def generate_recruitment_actions(self, player):
         action_space = []
 
-        if player.gold >= MINION_COST and not player.hand.is_full():
+        if player.gold >= MINION_COST and len(player.tawern_options) > 0 and not player.hand.is_full():
             action_space.append('buy')
 
         if player.gold >= REFRESH_COST:
@@ -97,7 +137,7 @@ class RecruitmentStage:
         return action_space
 
     def handle_recruitment_action(self, player, action):
-        if action in ['ready, freeze']:
+        if action in ['ready', 'freeze']:
             player.state = State.READY
             
         if action == 'ready':

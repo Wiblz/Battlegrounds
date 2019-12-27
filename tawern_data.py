@@ -80,8 +80,8 @@ minions = {
     },
 
     # DEMONS #
-    'Voidwwalker' : {
-        'name': 'Voidwwalker',
+    'Voidwalker' : {
+        'name': 'Voidwalker',
         'attack': 1,
         'health': 3,
         'tier': 1,
@@ -430,7 +430,7 @@ tier_contents = {
         'Wrath Weaver',
         'Alleycat',
         'Dire Wolf Alpha',
-        'Voidwwalker',
+        'Voidwalker',
         'Vulgar Homunculus',
         'Mecharoo',
         'Micro Machine',
@@ -516,5 +516,6 @@ class State(Enum):
     CHOOSING_MINION_TO_BUY = 6
     CHOOSING_MINION_TO_SELL = 7
     CHOOSING_MINION_TO_MOVE = 8
-    READY = 9
-    DEAD = 10
+    CHOOSING_BATTLECRY_TARGET = 9
+    READY = 10
+    DEAD = 11

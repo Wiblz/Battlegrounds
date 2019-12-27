@@ -28,30 +28,26 @@ class Minion:
 
         self.deathrattles = []
         self.battlecry = None
+        self.targeted_battlecry = None
+        self.valid_targets = None
         self.add_effect = None          # aura effect this minion provides to other minions
                                         # (supposedly) should be function
         self.remove_effect = None
+        self.on_play = None
 
         self.dead = False
 
     def __str__(self):
         return f'{self.name} {self.attack}/{self.health}'
-         
+
+    def __repr__(self):
+        return self.__str__()
+
     def set_board(self, board):
         self.board = board
     
     def get_position(self):
         return self.board.minions.index(self)
-    
-    def on_play(self, target=None):
-        return
-        # Handle battlecry
-        if self.battlecry is not None:
-            self.battlecry(self, self.board, target)
-    
-        # Add effect
-        if self.add_effect is not None:
-            self.add_effect(self.board)
 
     def on_death(self):
         return
