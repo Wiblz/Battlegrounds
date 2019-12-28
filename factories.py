@@ -14,7 +14,7 @@ class Minions:
             def battlecry(self):
                 summoned = []
                 if len(board.minions) < 7:
-                    token = Minion('Cat', 1, 1, 1, type='Beast')
+                    token = Minion('Cat', 1, 1, 1, type='Beast', is_token=True)
                     board.minions.insert(instance.get_position() + 1, token)
                     summoned.append(token)
                 
@@ -28,7 +28,7 @@ class Minions:
                 summoned = []
 
                 if len(board.minions) < 7:
-                    token = Minion('Microbot', 1, 1, 1, type='Mech')
+                    token = Minion('Microbot', 1, 1, 1, type='Mech', is_token=True)
                     board.minions.insert(position, token)
                     summoned.append(token)
                 
@@ -41,7 +41,7 @@ class Minions:
             def battlecry(self):
                 summoned = []
                 if len(board.minions) < 7:
-                    token = Minion('Murloc', 1, 1, 1, type='Murloc')
+                    token = Minion('Murloc', 1, 1, 1, type='Murloc', is_token=True)
                     board.minions.insert(instance.get_position() + 1, token)
                     summoned.append(token)
                 
@@ -144,6 +144,7 @@ class Minions:
         elif name == 'Psych-o-Tron':
             instance = Minion(name, 3, 4, 3, type='Mech', taunt=True, bubble=True)
         
+        instance.board = board
         instance.attack += card.attack_buff
         instance.health += card.health_buff
 

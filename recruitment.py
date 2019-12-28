@@ -44,6 +44,7 @@ class RecruitmentStage:
         elif player.state is State.CHOOSING_CARD:
             action_space = self.generate_card_choose_actions(player)
             card = player.hand.cards[player.choose_action(action_space)]
+            player.debug_actions.append(f'Play {card} card')
             player.hand.cards.remove(card)
 
             if isinstance(card, MinionCard):
@@ -67,15 +68,18 @@ class RecruitmentStage:
             if player.minion_picked.targeted_battlecry is not None and \
                len(player.minion_picked.valid_targets) > 0:
                 player.board.put(player.minion_picked, slot)
+                player.debug_actions.append(f'Play {player.minion_picked} to {slot} slot with targeted battlecry')
                 player.state = State.CHOOSING_BATTLECRY_TARGET
             else:
                 player.board.play(minion=player.minion_picked, slot=slot)
                 player.state = State.RECRUITMENT
+                player.debug_actions.append(f'Play {player.minion_picked} to {slot} slot')
                 player.minion_picked = None
 
         elif player.state is State.CHOOSING_BATTLECRY_TARGET:
             player.state = State.RECRUITMENT
             target = player.choose_minion(player.minion_picked.valid_targets)
+            player.debug_actions.append(f'Apply battlecry of {player.minion_picked} to {target}')
             player.board.handle_targeted_battlecry(player.minion_picked, target)
             player.minion_picked = None
 
@@ -83,6 +87,7 @@ class RecruitmentStage:
             player.state = State.RECRUITMENT
             slot = player.choose_board_slot()
             player.board.put(player.minion_picked, slot)
+            player.debug_actions.append(f'Place {player.minion_picked} to {slot} slot')
             player.minion_picked = None
 
         elif player.state is State.CHOOSING_MINION_TO_BUY:
@@ -91,24 +96,27 @@ class RecruitmentStage:
             player.tawern_options.remove(minion)
             player.hand.cards.append(minion)
             player.gold -= 3
+            player.debug_actions.append(f'Buy {minion}')
 
         elif player.state is State.CHOOSING_MINION_TO_SELL:
             player.state = State.RECRUITMENT
             minion = player.choose_minion(player.board.minions)
             player.board.minions.remove(minion)
-            self.pool.return_minion(minion.name)
+            self.pool.return_minion(minion)
             if player.gold < MAX_GOLD:
                 player.gold += 1
+            player.debug_actions.append(f'Sell {minion}')
 
         elif player.state is State.CHOOSING_MINION_TO_MOVE:
             player.state = State.PLACING_MINION
             player.minion_picked = player.choose_minion(player.board.minions)
             player.board.remove(player.minion_picked)
+            player.debug_actions.append(f'Move {minion}')
 
         print('Player', player.id, player.board.minions)
 
     def refresh_tawern(self, player):
-        self.pool.return_minions(player.tawern_options)
+        self.pool.return_cards(player.tawern_options)
         player.tawern_options = self.pool.generate_minions(player.tier)
 
     def generate_recruitment_actions(self, player):
@@ -141,27 +149,34 @@ class RecruitmentStage:
             player.state = State.READY
             
         if action == 'ready':
+            player.debug_actions.append('Ready')
             player.tawern_options = None
 
         elif action == 'refresh':
             player.gold -= 1
+            player.debug_actions.append('Refresh tawern')
             self.refresh_tawern(player)
             
         elif action == 'upgrade tawern':
+            player.debug_actions.append('Upgrade tawern')
             player.gold -= player.tawern_upgrade_cost
             player.tier += 1
             player.tawern_upgrade_cost = tawern_upgrade_cost[player.tier]
         
         elif action == 'sell':
+            player.debug_actions.append('Sell')
             player.state = State.CHOOSING_MINION_TO_SELL
 
         elif action == 'buy':
+            player.debug_actions.append('Buy')
             player.state = State.CHOOSING_MINION_TO_BUY
 
         elif action == 'reorder':
+            player.debug_actions.append('Reorder')
             player.state = State.CHOOSING_MINION_TO_MOVE
 
         elif action == 'play card':
+            player.debug_actions.append('Play card')
             player.state = State.CHOOSING_CARD
 
     def generate_card_choose_actions(self, player):

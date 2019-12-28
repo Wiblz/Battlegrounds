@@ -20,12 +20,16 @@ class Pool:
             for minion in tier_contents[tier]:
                 self.pool[tier][minion] = cnt
     
-    def return_minion(self, minion_name):
+    def _return_item(self, minion_name):
         self.pool[minions[minion_name]['tier']][minion_name] += 1
 
-    def return_minions(self, options):
-        for option in options:
-            self.return_minion(option.name)
+    def return_cards(self, cards):
+        for card in cards:
+            self._return_item(card.name)
+
+    def return_minion(self, minion):
+        if not minion.is_token:
+            self._return_item(minion.name)
 
     def generate_minions(self, tier, size=None):
         size = size or options_count[tier]

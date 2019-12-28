@@ -2,7 +2,7 @@ from recruitment import RecruitmentStage
 from battle import BattleStage
 from player import Player
 from tawern_data import heroes
-import random
+import random, traceback
 import numpy as np
 
 
@@ -38,9 +38,13 @@ class Game:
                 ready = True
                 for player in self.players:
                     if not player.is_ready():
-                        self.recruitment.take_action(player)
-                        ready = False
-            
+                        try:
+                            self.recruitment.take_action(player)
+                            ready = False
+                        except Exception: 
+                            print(f'player {player.id}')
+                            print(player.debug_actions)
+                            traceback.print_exc()            
 
 if __name__ == '__main__':
     game = Game()

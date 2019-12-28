@@ -1,6 +1,7 @@
 class Minion:
     def __init__(self, name, attack, health, tier,
-                type=None, 
+                type=None,
+                is_token=False, 
                 taunt=False,
                 bubble=False,
                 magnetic=False,
@@ -16,6 +17,7 @@ class Minion:
         self.health = health
         self.tier = tier
         self.type = type
+        self.is_token = is_token
         
         self.taunt = taunt
         self.poison = False             # no poisonous minions by default

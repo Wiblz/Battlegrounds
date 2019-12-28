@@ -25,6 +25,8 @@ class Player:
         self.hero = None
         self.last_opponent = None
 
+        self.debug_actions = []
+
     def is_ready(self):
         return self.state is State.READY
 
@@ -55,7 +57,7 @@ class Player:
 
     def choose_board_slot(self):
         if self.bot:
-            return np.random.randint(len(self.board.minions))
+            return np.random.randint(len(self.board.minions) + 1)
         else:
             print(f'Where? (0 - {len(self.board.minions)})\n')
             return int(input())
