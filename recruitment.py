@@ -113,7 +113,8 @@ class RecruitmentStage:
             player.board.remove(player.minion_picked)
             player.debug_actions.append(f'Move {minion}')
 
-        print('Player', player.id, player.board.minions)
+        print('Player', player.id, player.board.minions,
+                                player.board.on_murloc_summoned)
 
     def refresh_tawern(self, player):
         self.pool.return_cards(player.tawern_options)

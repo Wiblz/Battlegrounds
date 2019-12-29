@@ -5,9 +5,12 @@ import random
 
 class Minions:
     @staticmethod
-    def new(card, player):
+    def new(player, card=None, name=None):
         board = player.board
-        name = card.name
+        if card is not None:
+            name = card.name
+
+        # Tier 1
         if name == 'Alleycat':
             instance = Minion(name, 1, 1, 1, type='Beast')
 
@@ -15,7 +18,7 @@ class Minions:
                 summoned = []
                 if len(board.minions) < 7:
                     token = Minion('Cat', 1, 1, 1, type='Beast', is_token=True)
-                    board.minions.insert(instance.get_position() + 1, token)
+                    board.put(token, instance.get_position() + 1)
                     summoned.append(token)
                 
                 return summoned
@@ -29,7 +32,7 @@ class Minions:
 
                 if len(board.minions) < 7:
                     token = Minion('Microbot', 1, 1, 1, type='Mech', is_token=True)
-                    board.minions.insert(position, token)
+                    board.put(token, position)
                     summoned.append(token)
                 
                 return summoned
@@ -40,9 +43,9 @@ class Minions:
 
             def battlecry(self):
                 summoned = []
-                if len(board.minions) < 7:
+                if not board.full():
                     token = Minion('Murloc', 1, 1, 1, type='Murloc', is_token=True)
-                    board.minions.insert(instance.get_position() + 1, token)
+                    board.put(token, instance.get_position() + 1)
                     summoned.append(token)
                 
                 return summoned
@@ -82,7 +85,7 @@ class Minions:
         elif name == 'Wrath Weaver':
             instance = Minion(name, 1, 1, 1)
 
-            def trigger(self, minion):
+            def trigger(self):
                 player.hero.hp -= 1
                 self.attack += 2
                 self.health += 2
@@ -95,7 +98,7 @@ class Minions:
         elif name == 'Micro Machine':
             instance = Minion(name, 1, 2, 1, type='Mech')
             
-            def trigger(self, minion):
+            def trigger(self):
                 self.attack += 1
 
             def on_play(self):
@@ -106,7 +109,8 @@ class Minions:
         elif name == 'Murloc Tidecaller':
             instance = Minion(name, 1, 2, 1, type='Murloc')
 
-            def trigger(self, minion):
+            def trigger(self):
+                print('Triggered!')
                 self.attack += 1
 
             def on_play(self):
@@ -134,6 +138,83 @@ class Minions:
         elif name == 'Voidwalker':
             instance = Minion(name, 1, 3, 1, type='Demon', taunt=True)
 
+        # Tier 2
+        elif name == 'Spawn of N\'Zoth':
+            instance = Minion(name, 2, 2, 2)
+
+            def deathrattle(self, position):
+                for minion in board.minions:
+                    minion.attack += 1
+                    minion.health += 1
+
+                return []
+
+            instance.deathrattles.append(MethodType(deathrattle, instance))
+        elif name == 'Kindly Grandmother':
+            instance = Minion(name, 1, 1, 2, type='Beast')
+
+            def deathrattle(self, position):
+                summoned = []
+                if not board.full():
+                    token = Minion('Big Bad Wolf', 3, 2, 1, type='Beast')
+                    player.board.put(token, position)
+                    summoned.append(token)
+
+                return summoned
+            
+            instance.deathrattles.append(MethodType(deathrattle, instance))
+        elif name == 'Mounted Raptor':
+            instance = Minion(name, 3, 2, 2, type='Beast')
+
+            def deathrattle(self, position):
+                summoned = []
+                if not board.full():
+                    minion_name = random.choice([
+                        'Righteous Protector',
+                        'Selfless Hero',
+                        # 'Wrath Weaver'            # TODO: test if this is possible
+                        'Alleycat',
+                        'Voidwalker',
+                        'Mecharoo',
+                        'Murloc Tidecaller',
+                        # 'Nathrezim Overseer',     # and this
+                        'Pogo-Hopper',
+                        'Shifter Zerus',
+                        'Toxfin'
+                    ])
+                    minion = Minions.new(player=player, name=minion_name)
+                    player.board.put(minion, position)
+                    summoned.append(minion)
+
+                return summoned
+            
+            instance.deathrattles.append(MethodType(deathrattle, instance))
+        elif name == 'Rat Pack':
+            instance = Minion(name, 2, 2, 2, type='Beast')
+
+            def deathrattle(self, position):
+                summoned = []
+                for _ in range(self.attack):
+                    if not board.full():
+                        token = Minion(name, 1, 1, 1, type='Beast', is_token=True)
+                        player.board.put(token, position)
+                        summoned.append(token)
+
+                return summoned
+
+            instance.deathrattles.append(MethodType(deathrattle, instance))
+        elif name == 'Scavenging Hyena':
+            instance = Minion(name, 2, 2, 2, type='Beast')
+
+            def trigger(self):
+                self.attack += 2
+                self.health += 1
+
+            def on_play(self):
+                board.on_beast_died.append(self)
+
+            instance.on_play = MethodType(on_play, instance)
+            instance.trigger = MethodType(trigger, instance)
         elif name == 'Annoy-o-Tron':
             instance = Minion(name, 1, 2, 2, type='Mech', taunt=True, bubble=True)
         elif name == 'Nightmare Amalgam':
@@ -145,8 +226,9 @@ class Minions:
             instance = Minion(name, 3, 4, 3, type='Mech', taunt=True, bubble=True)
         
         instance.board = board
-        instance.attack += card.attack_buff
-        instance.health += card.health_buff
+        if card is not None:
+            instance.attack += card.attack_buff
+            instance.health += card.health_buff
 
         return instance
 
