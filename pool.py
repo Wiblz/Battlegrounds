@@ -28,7 +28,7 @@ class Pool:
             self._return_item(card.name)
 
     def return_minion(self, minion):
-        if not minion.is_token:
+        if not minion.summoned:
             self._return_item(minion.name)
 
     def generate_minions(self, tier, size=None):

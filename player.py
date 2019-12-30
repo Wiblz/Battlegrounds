@@ -24,6 +24,8 @@ class Player:
         self.gold = self.turn_start_gold
         self.hero = None
         self.last_opponent = None
+        
+        self.pogos = 0
 
         self.debug_actions = []
 

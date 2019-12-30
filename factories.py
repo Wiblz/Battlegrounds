@@ -17,7 +17,7 @@ class Minions:
             def battlecry(self):
                 summoned = []
                 if len(board.minions) < 7:
-                    token = Minion('Cat', 1, 1, 1, type='Beast', is_token=True)
+                    token = Minion('Cat', 1, 1, 1, type='Beast', summoned=True)
                     board.put(token, instance.get_position() + 1)
                     summoned.append(token)
                 
@@ -31,7 +31,7 @@ class Minions:
                 summoned = []
 
                 if len(board.minions) < 7:
-                    token = Minion('Microbot', 1, 1, 1, type='Mech', is_token=True)
+                    token = Minion('Microbot', 1, 1, 1, type='Mech', summoned=True)
                     board.put(token, position)
                     summoned.append(token)
                 
@@ -44,7 +44,7 @@ class Minions:
             def battlecry(self):
                 summoned = []
                 if not board.full():
-                    token = Minion('Murloc', 1, 1, 1, type='Murloc', is_token=True)
+                    token = Minion('Murloc', 1, 1, 1, type='Murloc', summoned=True)
                     board.put(token, instance.get_position() + 1)
                     summoned.append(token)
                 
@@ -196,7 +196,7 @@ class Minions:
                 summoned = []
                 for _ in range(self.attack):
                     if not board.full():
-                        token = Minion(name, 1, 1, 1, type='Beast', is_token=True)
+                        token = Minion(name, 1, 1, 1, type='Beast', summoned=True)
                         player.board.put(token, position)
                         summoned.append(token)
 
@@ -215,8 +215,61 @@ class Minions:
 
             instance.on_play = MethodType(on_play, instance)
             instance.trigger = MethodType(trigger, instance)
+        elif name == 'Nathrezim Overseer':
+            instance = Minion(name, 2, 4, 2, type='Demon')
+
+            def battlecry(self, target):
+                target.attack += 2
+                target.health += 2
+
+                return []
+            
+            instance.targeted_battlecry = MethodType(battlecry, instance)
+            instance.valid_targets = player.board.demons
         elif name == 'Annoy-o-Tron':
             instance = Minion(name, 1, 2, 2, type='Mech', taunt=True, bubble=True)
+        elif name == 'Harvest Golem':
+            instance = Minion(name, 2, 3, 2, type='Mech')
+
+            def deathrattle(self, position):
+                summoned = []
+                if not board.full():
+                    token = Minion(name, 2, 1, 1, type='Mech', summoned=True)
+                    player.board.put(token, position)
+                    summoned.append(token)
+
+                return summoned
+            
+            instance.deathrattles.append(MethodType(deathrattle, instance))
+        elif name == 'Kaboom Bot':
+            instance = Minion(name, 2, 2, 2, type='Mech')
+
+            # TODO: Deal 4 damage to random enemy minion
+            def deathrattle(self, position):
+
+                return []
+            
+            instance.deathrattles.append(MethodType(deathrattle, instance))
+        elif name == 'Metaltooth Leaper':
+            instance = Minion(name, 3, 3, 2, type='Mech')
+
+            def battlecry(self):
+                for mech in player.board.mechs:
+                    mech.attack += 2
+                    
+                return []
+            
+            instance.battlecry = MethodType(battlecry, instance)
+        elif name == 'Pogo-Hopper':
+            instance = Minion(name, 1, 1, 2, type='Mech')
+
+            def battlecry(self):
+                self.attack += player.pogos * 2
+                self.health += player.pogos * 2
+                    
+                return []
+
+            instance.battlecry = MethodType(battlecry, instance)
         elif name == 'Nightmare Amalgam':
             instance = Minion(name, 3, 4, 2, type='All')
         elif name == 'Shielded Minibot':
