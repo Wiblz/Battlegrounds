@@ -58,7 +58,7 @@ class Board:
             minion.trigger()
 
     def _check_on_death_triggers(self, minion):
-        if minion.type in ['Beast', 'All']
+        if minion.type in ['Beast', 'All']:
             self._trigger_all(self.on_beast_died)
 
     def _check_on_summon_triggers(self, minion):
