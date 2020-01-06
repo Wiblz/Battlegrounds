@@ -157,7 +157,7 @@ class Minions:
                 summoned = []
                 if not board.full():
                     token = Minion('Big Bad Wolf', 3, 2, 1, type='Beast')
-                    player.board.put(token, position)
+                    board.put(token, position)
                     summoned.append(token)
 
                 return summoned
@@ -183,7 +183,7 @@ class Minions:
                         'Toxfin'
                     ])
                     minion = Minions.new(player=player, name=minion_name)
-                    player.board.put(minion, position)
+                    board.put(minion, position)
                     summoned.append(minion)
 
                 return summoned
@@ -197,7 +197,7 @@ class Minions:
                 for _ in range(self.attack):
                     if not board.full():
                         token = Minion(name, 1, 1, 1, type='Beast', summoned=True)
-                        player.board.put(token, position)
+                        board.put(token, position)
                         summoned.append(token)
 
                 return summoned
@@ -225,7 +225,7 @@ class Minions:
                 return []
             
             instance.targeted_battlecry = MethodType(battlecry, instance)
-            instance.valid_targets = player.board.demons
+            instance.valid_targets = board.demons
         elif name == 'Annoy-o-Tron':
             instance = Minion(name, 1, 2, 2, type='Mech', taunt=True, bubble=True)
         elif name == 'Harvest Golem':
@@ -235,7 +235,7 @@ class Minions:
                 summoned = []
                 if not board.full():
                     token = Minion(name, 2, 1, 1, type='Mech', summoned=True)
-                    player.board.put(token, position)
+                    board.put(token, position)
                     summoned.append(token)
 
                 return summoned
@@ -244,8 +244,9 @@ class Minions:
         elif name == 'Kaboom Bot':
             instance = Minion(name, 2, 2, 2, type='Mech')
 
-            # TODO: Deal 4 damage to random enemy minion
             def deathrattle(self, position):
+                target = player.current_opponent.board.get_random()
+                board.damage(target, 4)
 
                 return []
             
@@ -254,7 +255,7 @@ class Minions:
             instance = Minion(name, 3, 3, 2, type='Mech')
 
             def battlecry(self):
-                for mech in player.board.mechs:
+                for mech in board.mechs:
                     mech.attack += 2
                     
                 return []
@@ -264,16 +265,31 @@ class Minions:
             instance = Minion(name, 1, 1, 2, type='Mech')
 
             def battlecry(self):
-                self.attack += player.pogos * 2
-                self.health += player.pogos * 2
+                self.attack += board.pogos_played * 2
+                self.health += board.pogos_played * 2
                     
                 return []
+            
+            def on_play(self):
+                board.pogos_played += 1
 
             instance.battlecry = MethodType(battlecry, instance)
+            instance.on_play = MethodType(on_play, instance)
         elif name == 'Nightmare Amalgam':
             instance = Minion(name, 3, 4, 2, type='All')
         elif name == 'Shielded Minibot':
             instance = Minion(name, 2, 2, 2, type='Mech', bubble=True)
+        elif name == 'Murloc Warleader':
+            instance = Minion(name, 3, 3, 2, type='Murloc')
+
+            def add_effect(self, target):
+                target.attack += 2
+
+            def remove_effect(self, target):
+                target.attack -= 2
+
+            def on_play(self):
+                pass
 
         elif name == 'Psych-o-Tron':
             instance = Minion(name, 3, 4, 3, type='Mech', taunt=True, bubble=True)

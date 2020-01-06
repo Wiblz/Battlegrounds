@@ -1,3 +1,6 @@
+from minion import Minion
+import random
+
 # Your other murlocs have +2 attack
 # Has +1 attack for each murlock on a battlefield
 # Whenever you summon a mech
@@ -9,7 +12,6 @@
 # Your taunt minions have +2 attack
 # Whenever a friendly demon dies
 # After a friendly minion loses divine shield 
-# After a friendly minion attacks
 # At the end of your turn
 # Whenever this minion takes damage
 # Your minions trigger their deathrattles twice
@@ -22,9 +24,14 @@
 
 
 # + Windfury
+
 # + At the start of each turn
+# + After a friendly minion attacks
+
 # + Whenever you summon a murloc
+
 # + After you play a demon
+
 # + Whenever a friendly beast dies
 
 
@@ -38,9 +45,12 @@ class Board:
         self.beasts = []
 
         self.on_turn_start = []
+        self.on_minion_attack = []
         self.on_murloc_summoned = []
         self.on_demon_played = []
         self.on_beast_died = []
+
+        self.pogos_played = 0
 
     def full(self):
         return len(self.minions) == 7
@@ -52,10 +62,18 @@ class Board:
         self.minions.insert(slot, minion)
         # TODO: handle alpha wolf
     
+    def get_random(self):
+        return random.choice(self.minions)
+
     def _trigger_all(self, minions):
         for minion in minions:
             print('trigger')
             minion.trigger()
+
+    def _check_for_deaths(self, minions):
+        for minion in minions:
+            if minion.dead:
+                self.on_death(minion)
 
     def _check_on_death_triggers(self, minion):
         if minion.type in ['Beast', 'All']
@@ -98,7 +116,33 @@ class Board:
         self._check_on_play_triggers(minion)
         self._register(minion)
 
+    def on_death(self, dead_minion):
+        # Remove effect
+        for minion in self.minions:
+            if minion != dead_minion and dead_minion in minion.effects:
+                minion.effects.remove(dead_minion)
+                dead_minion.remove_effect(minion)
+
+        # Handle deathrattles
+        for deathrattle in dead_minion.deathrattles:
+            position = dead_minion.get_position()
+            self.remove(dead_minion)
+            dead_minion.deathrattle(self, position)
+
     def handle_targeted_battlecry(self, minion, target):
         minion.targeted_battlecry(target)
         self._check_on_play_triggers(minion)
         self._register(minion)
+
+    def hit(self, attacking:Minion, target:Minion):
+        attacking.hit(target)
+        target.hit(attacking)
+
+        for minion in self.on_minion_attack:
+            minion.trigger()
+        
+        self._check_for_deaths([target, attacking])
+
+    def damage(self, target, amount):
+        target.damage(amount)
+        self._check_for_deaths([target, attacking])

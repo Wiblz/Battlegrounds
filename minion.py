@@ -51,38 +51,16 @@ class Minion:
     def get_position(self):
         return self.board.minions.index(self)
 
-    def on_death(self):
-        return
-        # Remove effect
-        for minion in self.board.minions:
-            if minion != self and self in minion.effects:
-                minion.effects.remove(self)
-                self.remove_effect(minion)
-
-        # Handle deathrattles
-        for deathrattle in self.deathrattles:
-            deathrattle(self.board)
-
-
-    # TODO: Deathrattles, effercts
-    def hit(self, target, immune=False):
-        if self.attack == 0:
+    def hit(self, target):
+        target.damage(self.damage, self.poison)
+    
+    def damage(self, amount, poison=False):
+        if amount == 0:
             return
         
-        # self -> target
-        if target.bubble:
-            target.bubble = False
+        if self.bubble:
+            self.bubble = False
         else:
-            target.health -= self.attack
-            if self.poison or target.health <= 0:
-                target.dead = True
-        
-        # target -> self
-        if not immune:          # 'workaround' for cleave damage
-            if self.bubble:
-                if target.attack != 0:
-                    self.bubble = False
-            else:
-                self.health -= target.attack
-                if target.poison or self.health <= 0:
-                    self.dead = True
+            self.health -= amount
+            if poison or self.health <= 0:
+                self.dead = True
