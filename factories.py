@@ -55,8 +55,9 @@ class Minions:
             instance = Minion(name, 2, 1, 1)
 
             def deathrattle(self, position):
-                if len(board.minions) > 0:
-                    minion = random.choice(board.minions)
+                non_bubble = filter(lambda x: not x.bubble, board.minions)
+                if len(non_bubble) > 0:
+                    minion = random.choice(non_bubble)
                     minion.bubble = True
 
                 return []                                       # no new minions summoned
@@ -129,7 +130,7 @@ class Minions:
             def remove_effect(self, target):
                 target.effects.remove(self)
 
-                target -= 1
+                target.attack -= 1
             
             instance.add_effect = MethodType(add_effect, instance)
             instance.remove_effect = MethodType(remove_effect, instance)
@@ -172,12 +173,12 @@ class Minions:
                     minion_name = random.choice([
                         'Righteous Protector',
                         'Selfless Hero',
-                        # 'Wrath Weaver'            # TODO: test if this is possible
+                        'Wrath Weaver',
                         'Alleycat',
                         'Voidwalker',
                         'Mecharoo',
                         'Murloc Tidecaller',
-                        # 'Nathrezim Overseer',     # and this
+                        # 'Nathrezim Overseer',     # TODO: test if this is possible
                         'Pogo-Hopper',
                         'Shifter Zerus',
                         'Toxfin'
@@ -280,6 +281,7 @@ class Minions:
         elif name == 'Shielded Minibot':
             instance = Minion(name, 2, 2, 2, type='Mech', bubble=True)
         elif name == 'Murloc Warleader':
+            # TODO: fix
             instance = Minion(name, 3, 3, 2, type='Murloc')
 
             def add_effect(self, target):
@@ -291,6 +293,27 @@ class Minions:
             def on_play(self):
                 pass
 
+            instance.add_effect = MethodType(add_effect, instance)
+            instance.remove_effect = MethodType(remove_effect, instance)
+            instance.on_play = MethodType(on_play, instance)
+        elif name == 'Old Murk-Eye':
+            # TODO: fix
+            instance = Minion(name, 2, 4, 2, type='Murloc')
+
+            def add_effect(self, target):
+                self.attack += 1
+
+            def remove_effect(self, target):
+                self.attack -= 1
+
+            def on_play(self):
+                pass
+            
+            instance.add_effect = MethodType(add_effect, instance)
+            instance.remove_effect = MethodType(remove_effect, instance)
+            instance.on_play = MethodType(on_play, instance)
+        
+        # Tier 3
         elif name == 'Psych-o-Tron':
             instance = Minion(name, 3, 4, 3, type='Mech', taunt=True, bubble=True)
         

@@ -46,6 +46,7 @@ class Board:
 
         self.on_turn_start = []
         self.on_minion_attack = []
+
         self.on_murloc_summoned = []
         self.on_demon_played = []
         self.on_beast_died = []

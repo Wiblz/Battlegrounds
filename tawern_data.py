@@ -150,13 +150,13 @@ minions = {
         'type': None,
     },
 
-    'Nightmare Amalgam' : {
-        'name': 'Nightmare Amalgam',
-        'attack': 3,
-        'health': 4,
-        'tier': 2,
-        'type': 'All',
-    },
+    # 'Nightmare Amalgam' : {
+    #     'name': 'Nightmare Amalgam',
+    #     'attack': 3,
+    #     'health': 4,
+    #     'tier': 2,
+    #     'type': 'All',
+    # },
 
     # BEASTS #
     'Kindly Grandmother' : {
@@ -441,7 +441,7 @@ tier_contents = {
 
     2 : [
         'Spawn of N\'Zoth',
-        'Nightmare Amalgam',
+        # 'Nightmare Amalgam',
         'Kindly Grandmother',
         'Mounted Raptor',
         'Rat Pack',
